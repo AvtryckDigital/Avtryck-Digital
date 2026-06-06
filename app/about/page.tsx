@@ -28,7 +28,7 @@ const team: Person[] = [
     phone: "070 338 85 30",
     education: [
       {
-        degree: "B.Sc Informationssystems",
+        degree: "B.Sc Information systems",
         school: "Uppsala universitet",
         year: "2024 – nu",
       },
@@ -52,7 +52,7 @@ const team: Person[] = [
     phone: "070 992 79 65",
     education: [
       {
-        degree: "B.Sc Informationssystems",
+        degree: "B.Sc Information systems",
         school: "Mid-Sweden University",
         year: "2025 – nu",
       },

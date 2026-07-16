@@ -1,0 +1,52 @@
+[
+  {
+    "name": "Nordanvik El & Belysning AB",
+    "webbplats": "https://exempel-elektriker.se",
+    "phone": "070-123 45 67",
+    "revenue": "5 000 tkr",
+    "modern_score": 3,
+    "summary": "Elektriker i Uppsala med fokus på installation och service åt privatpersoner och företag.",
+    "pain_point": "Sidan laddar långsamt, saknar mobilanpassning och har ingen tydlig kontaktväg.",
+    "sales_angle": "Hej! Vi bygger snabba, mobilvänliga prenumerationshemsidor för hantverksbolag som ert — vi tror ni tappar jobb till konkurrenter som syns bättre på mobilen."
+  },
+  {
+    "name": "Sörmlands Bygg & Renovering",
+    "webbplats": "https://exempel-bygg.se",
+    "phone": "073-987 65 43",
+    "revenue": "12 400 tkr",
+    "modern_score": 2,
+    "summary": "Byggfirma som utför renoveringar, tillbyggnader och totalentreprenader i Sörmland.",
+    "pain_point": "Ingen hemsida hittades — bolaget syns bara via en gammal Företagarna-katalog.",
+    "sales_angle": "Ett byggbolag med er omsättning bör synas först på Google när folk söker 'byggfirma Sörmland'. Vi kan ha en ny sida live på två veckor."
+  },
+  {
+    "name": "GreenLeaf Trädgårdsservice",
+    "webbplats": "https://exempel-tradgard.se",
+    "phone": "076-222 11 09",
+    "revenue": "2 100 tkr",
+    "modern_score": 4,
+    "summary": "Trädgårdsskötsel, beskärning och anläggning för villaägare i Västerås-området.",
+    "pain_point": "Föråldrad design från runt 2012, inga bilder på tidigare projekt och krånglig kontaktformulär.",
+    "sales_angle": "Med rätt bilder och ett enkelt bokningsflöde brukar trädgårdsfirmor se en tydlig ökning i förfrågningar redan under säsongen."
+  },
+  {
+    "name": "Kvänum Redovisning & Ekonomi",
+    "webbplats": "https://exempel-redovisning.se",
+    "phone": "070-555 44 33",
+    "revenue": "8 900 tkr",
+    "modern_score": 5,
+    "summary": "Redovisningsbyrå som hjälper mindre företag med bokföring, löner och rådgivning.",
+    "pain_point": "Sidan fungerar men känns opersonlig och saknar tydligt call-to-action för nya kunder.",
+    "sales_angle": "En redovisningsbyrå lever på förtroende — vi kan ge sidan ett proffsigare intryck och göra det enklare att boka ett första möte direkt."
+  },
+  {
+    "name": "Ålands Fiskrökeri",
+    "webbplats": "https://exempel-fiskrokeri.se",
+    "phone": "072-334 22 10",
+    "revenue": "3 600 tkr",
+    "modern_score": 8,
+    "summary": "Fiskrökeri och gårdsbutik med försäljning både på plats och online.",
+    "pain_point": "Sidan är i grunden fräsch men saknar tydlig lagerstatus i webshopen.",
+    "sales_angle": "Redan en stark sida — här passar snarare en mindre insats kring webshopens funktioner än en helt ny hemsida."
+  }
+]

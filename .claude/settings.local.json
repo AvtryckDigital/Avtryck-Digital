@@ -7,7 +7,11 @@
       "Bash(npx next:*)",
       "Bash(ls -lh /home/fredde1/webproject/avtryck/public/*.mp4)",
       "Bash(dpkg -l)",
-      "Bash(apt list:*)"
+      "Bash(apt list:*)",
+      "Bash(git -C /home/fredde1/webproject/avtryck status)",
+      "Bash(git -C /home/fredde1/webproject/avtryck log --oneline -3)",
+      "Bash(git -C /home/fredde1/webproject/avtryck diff app/contact/page.tsx public/__forms.html)",
+      "Bash(git -C /home/fredde1/webproject/avtryck diff components/Footer.tsx)"
     ]
   }
 }

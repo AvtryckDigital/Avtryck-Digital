@@ -17,14 +17,14 @@ export const metadata: Metadata = {
     template: "%s | Avtryck Digital",
   },
   description:
-    "Vi designar och bygger snabba, professionella hemsidor för småföretag. Hosting, support och synlighet på nätet ingår. Baserade i Sverige.",
+    "Vi designar och bygger snabba, professionella hemsidor för företag. Hosting, support och synlighet på nätet ingår. Baserade i Sverige.",
   keywords: ["webbdesign", "hemsida småföretag", "webbdesign Sverige", "hosting", "synlighet på nätet"],
   icons: {
     icon: { url: "/favicon.png", type: "image/png" },
   },
   openGraph: {
     type: "website",
-    locale: "sv_SV",
+    locale: "sv-SE",
     siteName: "Avtryck Digital",
   },
 };

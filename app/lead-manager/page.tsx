@@ -185,11 +185,21 @@ export default function LeadManagerPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ leadId: id, status }),
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("save failed");
+      .then(async (res) => {
+        if (!res.ok) {
+          // Ta med serverns förklaring (t.ex. Supabase 401 = fel nyckel/RLS) så
+          // att orsaken syns direkt i felrutan i stället för ett generiskt fel.
+          const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+          throw new Error(data?.detail || `save failed (${res.status})`);
+        }
       })
-      .catch(() => {
-        setSaveError("Kunde inte spara status till servern. Kontrollera anslutningen och försök igen.");
+      .catch((err: unknown) => {
+        const detail = err instanceof Error ? err.message : "";
+        setSaveError(
+          `Kunde inte spara status till servern. Kontrollera anslutningen och försök igen.${
+            detail ? ` (${detail})` : ""
+          }`
+        );
       });
   }
 
@@ -303,7 +313,7 @@ export default function LeadManagerPage() {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="mx-auto max-w-6xl px-5 pb-16 pt-28"
+      className="mx-auto max-w-[1600px] px-5 pb-16 pt-28"
     >
       <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -344,20 +354,20 @@ export default function LeadManagerPage() {
 
       <div className="overflow-hidden rounded-3xl border border-border-subtle bg-surface-2">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px] text-left text-sm">
+          <table className="w-full text-left text-sm">
             <thead>
               <tr className="border-b border-border-subtle text-xs uppercase tracking-wide text-white/40">
-                <th className="px-5 py-4 font-medium">Bolag</th>
-                <th className="px-5 py-4 font-medium">Bransch</th>
-                <th className="px-5 py-4 font-medium">Ort/Län</th>
-                <th className="px-5 py-4 font-medium">Omsättning</th>
-                <th className="px-5 py-4 font-medium">Vinst</th>
-                <th className="px-5 py-4 font-medium">Anställda</th>
-                <th className="px-5 py-4 font-medium">Telefon</th>
-                <th className="px-5 py-4 font-medium">Hemsida</th>
-                {hasAllabolagColumn && <th className="px-5 py-4 font-medium">Allabolag</th>}
-                {hasCeoColumn && <th className="px-5 py-4 font-medium">VD</th>}
-                <th className="px-5 py-4 font-medium">Status</th>
+                <th className="px-3 py-3.5 font-medium">Bolag</th>
+                <th className="px-3 py-3.5 font-medium">Bransch</th>
+                <th className="px-3 py-3.5 font-medium">Ort/Län</th>
+                <th className="px-3 py-3.5 font-medium">Omsättning</th>
+                <th className="px-3 py-3.5 font-medium">Vinst</th>
+                <th className="px-3 py-3.5 font-medium">Anställda</th>
+                <th className="px-3 py-3.5 font-medium">Telefon</th>
+                <th className="px-3 py-3.5 font-medium">Hemsida</th>
+                {hasAllabolagColumn && <th className="px-3 py-3.5 font-medium">Allabolag</th>}
+                {hasCeoColumn && <th className="px-3 py-3.5 font-medium">VD</th>}
+                <th className="px-3 py-3.5 font-medium">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -380,23 +390,23 @@ export default function LeadManagerPage() {
                       exit={{ opacity: 0 }}
                       className={`border-b border-border-subtle/60 last:border-0 hover:bg-white/[0.02] ${rowClass}`}
                     >
-                      <td className="px-5 py-4 font-medium text-white">{lead.legalName}</td>
-                      <td className="px-5 py-4 text-white/70">{lead.industry ?? "—"}</td>
-                      <td className="px-5 py-4 text-white/70">
+                      <td className="px-3 py-3.5 font-medium text-white">{lead.legalName}</td>
+                      <td className="px-3 py-3.5 text-white/70">{lead.industry ?? "—"}</td>
+                      <td className="px-3 py-3.5 text-white/70">
                         <span className="flex items-center gap-1.5">
                           <MapPin size={13} className="text-white/30" />
                           {lead.county ?? "—"}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-white/70">{lead.revenue ?? "—"}</td>
-                      <td className="px-5 py-4 text-white/70">{lead.profit ?? "—"}</td>
-                      <td className="px-5 py-4 text-white/70">
+                      <td className="px-3 py-3.5 text-white/70">{lead.revenue ?? "—"}</td>
+                      <td className="px-3 py-3.5 text-white/70">{lead.profit ?? "—"}</td>
+                      <td className="px-3 py-3.5 text-white/70">
                         <span className="flex items-center gap-1.5">
                           <Users size={13} className="text-white/30" />
                           {lead.employees ?? "—"}
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-white/70">
+                      <td className="px-3 py-3.5 text-white/70">
                         {lead.phone ? (
                           <a
                             href={`tel:${lead.phone.replace(/\s/g, "")}`}
@@ -409,7 +419,7 @@ export default function LeadManagerPage() {
                           "—"
                         )}
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-3 py-3.5">
                         {lead.homePage ? (
                           <a
                             href={lead.homePage.startsWith("http") ? lead.homePage : `https://${lead.homePage}`}
@@ -427,7 +437,7 @@ export default function LeadManagerPage() {
                         )}
                       </td>
                       {hasAllabolagColumn && (
-                        <td className="px-5 py-4">
+                        <td className="px-3 py-3.5">
                           {lead.allabolagUrl ? (
                             <a
                               href={lead.allabolagUrl}
@@ -444,7 +454,7 @@ export default function LeadManagerPage() {
                         </td>
                       )}
                       {hasCeoColumn && (
-                        <td className="px-5 py-4 text-white/70">
+                        <td className="px-3 py-3.5 text-white/70">
                           {lead.ceo ? (
                             <span className="flex items-center gap-1.5">
                               <User size={13} className="text-white/30" />
@@ -455,7 +465,7 @@ export default function LeadManagerPage() {
                           )}
                         </td>
                       )}
-                      <td className="px-5 py-4">
+                      <td className="px-3 py-3.5">
                         <select
                           value={status}
                           onChange={(e) => updateStatus(lead.id, e.target.value as ContactStatus)}

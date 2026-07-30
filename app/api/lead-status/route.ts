@@ -26,6 +26,15 @@ function headers(key: string) {
   };
 }
 
+// Supabase svarar med en förklarande JSON/text-body vid fel (t.ex. RLS-blockering
+// eller fel nyckel). Vi tar med statuskod + body i det kastade felet så att den
+// verkliga orsaken syns i loggen och i svaret, i stället för ett generiskt 500.
+async function assertOk(res: Response) {
+  if (res.ok) return;
+  const detail = (await res.text().catch(() => "")).slice(0, 500);
+  throw new Error(`Supabase-anrop misslyckades (${res.status}) ${detail}`.trim());
+}
+
 export async function GET() {
   try {
     const { url, key } = credentials();
@@ -33,9 +42,7 @@ export async function GET() {
       headers: headers(key),
       cache: "no-store",
     });
-    if (!res.ok) {
-      throw new Error(`Supabase-anrop misslyckades (${res.status})`);
-    }
+    await assertOk(res);
     const rows = (await res.json()) as { lead_id: string; status: string }[];
     const statuses: Record<string, string> = {};
     for (const row of rows) {
@@ -44,7 +51,11 @@ export async function GET() {
     return NextResponse.json({ statuses });
   } catch (error) {
     console.error("Kunde inte hämta kontaktstatus:", error);
-    return NextResponse.json({ error: "Kunde inte hämta kontaktstatus." }, { status: 500 });
+    const detail = error instanceof Error ? error.message : "Okänt fel";
+    return NextResponse.json(
+      { error: "Kunde inte hämta kontaktstatus.", detail },
+      { status: 500 }
+    );
   }
 }
 
@@ -57,15 +68,20 @@ export async function POST(request: Request) {
     const { url, key } = credentials();
     const res = await fetch(`${url}/rest/v1/lead_status?on_conflict=lead_id`, {
       method: "POST",
-      headers: { ...headers(key), Prefer: "resolution=merge-duplicates" },
+      headers: {
+        ...headers(key),
+        Prefer: "resolution=merge-duplicates,return=minimal",
+      },
       body: JSON.stringify({ lead_id: body.leadId, status: body.status }),
     });
-    if (!res.ok) {
-      throw new Error(`Supabase-anrop misslyckades (${res.status})`);
-    }
+    await assertOk(res);
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Kunde inte spara kontaktstatus:", error);
-    return NextResponse.json({ error: "Kunde inte spara kontaktstatus." }, { status: 500 });
+    const detail = error instanceof Error ? error.message : "Okänt fel";
+    return NextResponse.json(
+      { error: "Kunde inte spara kontaktstatus.", detail },
+      { status: 500 }
+    );
   }
 }

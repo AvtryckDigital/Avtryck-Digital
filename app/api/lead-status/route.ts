@@ -85,3 +85,35 @@ export async function POST(request: Request) {
     );
   }
 }
+
+// Tar bort rader efter att gamla positionsbaserade markeringar (lead-<index>)
+// migrerats till bolagens stabila nycklar, så att den döda datan inte ligger kvar
+// och triggar migreringsbannern på fel lista.
+export async function DELETE(request: Request) {
+  try {
+    const body = (await request.json()) as { leadIds?: string[] };
+    const ids = (body.leadIds ?? []).filter((id) => typeof id === "string" && id.length > 0);
+    if (ids.length === 0) {
+      return NextResponse.json({ error: "leadIds krävs." }, { status: 400 });
+    }
+    const { url, key } = credentials();
+    // PostgREST tar bort flera rader med ett in-filter. Varje värde citeras och
+    // URL-kodas var för sig så att kommatecknen förblir riktiga separatorer.
+    const inList = ids
+      .map((id) => encodeURIComponent(`"${id.replace(/"/g, '""')}"`))
+      .join(",");
+    const res = await fetch(`${url}/rest/v1/lead_status?lead_id=in.(${inList})`, {
+      method: "DELETE",
+      headers: headers(key),
+    });
+    await assertOk(res);
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Kunde inte ta bort gamla markeringar:", error);
+    const detail = error instanceof Error ? error.message : "Okänt fel";
+    return NextResponse.json(
+      { error: "Kunde inte ta bort gamla markeringar.", detail },
+      { status: 500 }
+    );
+  }
+}

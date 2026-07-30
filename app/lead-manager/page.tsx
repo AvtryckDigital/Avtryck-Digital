@@ -21,7 +21,11 @@ type RawLead = Record<string, unknown>;
 type ContactStatus = "none" | "no" | "no_answer" | "meeting";
 
 type DisplayLead = {
+  // Stabil bolagsidentitet (org.nr eller namn) — status knyts hit, inte till radens position.
   id: string;
+  // Gamla positionsbaserade nyckeln (lead-<index>). Behålls bara för att kunna
+  // migrera markeringar som sparats i det gamla formatet till den stabila nyckeln.
+  legacyId: string;
   legalName: string;
   industry?: string;
   county?: string;
@@ -126,10 +130,24 @@ function extractUrls(raw: RawLead): { homePage?: string; allabolagUrl?: string }
   return { homePage, allabolagUrl };
 }
 
+// Kontaktstatus måste knytas till bolagets identitet — inte till radens position i
+// filen. Annars ärver ett nytt bolag på samma rad en gammal markering när man laddar
+// upp en ny lista. Vi använder org.nr när det finns (siffror, formatoberoende), annars
+// ett normaliserat företagsnamn. Positionsnyckel används bara som absolut sista utväg
+// för rader helt utan namn och org.nr.
+function stableLeadKey(raw: RawLead): string | null {
+  const orgDigits = toText(pickRaw(raw, FIELD_CANDIDATES.orgNumber))?.replace(/\D/g, "");
+  if (orgDigits && orgDigits.length >= 6) return `org:${orgDigits}`;
+  const name = toText(pickRaw(raw, FIELD_CANDIDATES.legalName));
+  if (name) return `name:${name.trim().toLowerCase().replace(/\s+/g, " ")}`;
+  return null;
+}
+
 function normalizeLead(raw: RawLead, index: number): DisplayLead {
   const { homePage, allabolagUrl } = extractUrls(raw);
   return {
-    id: toText(pickRaw(raw, FIELD_CANDIDATES.orgNumber)) ?? `lead-${index}`,
+    id: stableLeadKey(raw) ?? `row-${index}`,
+    legacyId: `lead-${index}`,
     legalName: toText(pickRaw(raw, FIELD_CANDIDATES.legalName)) ?? "Okänt bolag",
     industry: toText(pickRaw(raw, FIELD_CANDIDATES.industry)),
     county: toText(pickRaw(raw, FIELD_CANDIDATES.county)),
@@ -150,6 +168,8 @@ export default function LeadManagerPage() {
   const [query, setQuery] = useState("");
   const [statuses, setStatuses] = useState<Record<string, ContactStatus>>({});
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [isMigrating, setIsMigrating] = useState(false);
+  const [migrationDismissed, setMigrationDismissed] = useState(false);
 
   // Kontaktstatus lagras delat på servern (via /api/lead-status) så att alla
   // som öppnar verktyget — oavsett dator eller webbläsare — ser samma
@@ -219,6 +239,7 @@ export default function LeadManagerPage() {
           return;
         }
         setLeads(list.map((raw, index) => normalizeLead(raw as RawLead, index)));
+        setMigrationDismissed(false); // varje ny fil får en egen chans att erbjuda migrering
       } catch {
         setError("Kunde inte tolka filen som JSON.");
       }
@@ -255,6 +276,70 @@ export default function LeadManagerPage() {
       )
     );
   }, [leads, query]);
+
+  // Markeringar som ligger kvar i det gamla positionsformatet (lead-<index>) för
+  // bolag i den här listan som ännu inte har en markering på sin stabila nyckel.
+  // Erbjuds för engångsmigrering via bannern nedan.
+  const legacyMarks = useMemo(() => {
+    if (!leads) return [];
+    return leads
+      .filter((lead) => statuses[lead.legacyId] !== undefined && statuses[lead.id] === undefined)
+      .map((lead) => ({ lead, status: statuses[lead.legacyId] }));
+  }, [leads, statuses]);
+
+  // Flyttar positionssparade markeringar till bolagens stabila nyckel. Görs bara på
+  // användarens uttryckliga begäran, eftersom positionsnyckeln inte kan mappas till
+  // rätt bolag om den aktuella listan inte är samma som markeringarna gjordes på.
+  async function migrateLegacyMarks() {
+    const marks = legacyMarks;
+    if (marks.length === 0) return;
+    setIsMigrating(true);
+    setSaveError(null);
+    // Optimistiskt lokalt först — då försvinner bannern direkt (bolagen får en
+    // markering på sin stabila nyckel och räknas inte längre som "legacy").
+    setStatuses((prev) => {
+      const next = { ...prev };
+      for (const { lead, status } of marks) next[lead.id] = status;
+      return next;
+    });
+    try {
+      await Promise.all(
+        marks.map(({ lead, status }) =>
+          fetch("/api/lead-status", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ leadId: lead.id, status }),
+          }).then((res) => {
+            if (!res.ok) throw new Error(`save failed (${res.status})`);
+          })
+        )
+      );
+      // Städa bort de gamla positionsraderna så bannern inte dyker upp igen på en
+      // annan lista. Best effort — markeringarna är redan sparade på de stabila
+      // nycklarna, så ett misslyckat städ-anrop är inte kritiskt.
+      const legacyIds = marks.map(({ lead }) => lead.legacyId);
+      try {
+        await fetch("/api/lead-status", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ leadIds: legacyIds }),
+        });
+      } catch {
+        /* ignoreras — död data som ändå inte påverkar de migrerade markeringarna */
+      }
+      setStatuses((prev) => {
+        const next = { ...prev };
+        for (const id of legacyIds) delete next[id];
+        return next;
+      });
+    } catch {
+      setSaveError(
+        "Kunde inte spara alla migrerade markeringar till servern. Kontrollera anslutningen och försök igen."
+      );
+    } finally {
+      setIsMigrating(false);
+    }
+  }
 
   function reset() {
     setLeads(null);
@@ -352,6 +437,30 @@ export default function LeadManagerPage() {
         </div>
       )}
 
+      {legacyMarks.length > 0 && !migrationDismissed && (
+        <div className="mb-5 flex flex-wrap items-center gap-3 rounded-2xl border border-yellow-400/30 bg-yellow-400/10 px-4 py-3 text-sm text-yellow-200">
+          <FileWarning size={16} className="shrink-0" />
+          <span className="min-w-[16rem] flex-1">
+            {legacyMarks.length} markering{legacyMarks.length === 1 ? "" : "ar"} är sparade i
+            gammalt format (på listposition). Migrera dem till bolagen i den här listan — gör
+            bara det om det är samma lista som markeringarna ursprungligen gjordes på.
+          </span>
+          <button
+            onClick={migrateLegacyMarks}
+            disabled={isMigrating}
+            className="rounded-full bg-yellow-400/90 px-4 py-1.5 text-xs font-semibold text-background transition-colors hover:bg-yellow-400 disabled:opacity-60"
+          >
+            {isMigrating ? "Migrerar…" : `Migrera ${legacyMarks.length}`}
+          </button>
+          <button
+            onClick={() => setMigrationDismissed(true)}
+            className="rounded-full border border-yellow-400/30 px-4 py-1.5 text-xs font-medium text-yellow-200/80 transition-colors hover:text-yellow-100"
+          >
+            Ignorera
+          </button>
+        </div>
+      )}
+
       <div className="overflow-hidden rounded-3xl border border-border-subtle bg-surface-2">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -384,7 +493,7 @@ export default function LeadManagerPage() {
                           : "";
                   return (
                     <motion.tr
-                      key={lead.id}
+                      key={lead.legacyId}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}

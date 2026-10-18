@@ -7,7 +7,6 @@ import styles from "./HomeProcess.module.css";
 const steps = [
   {
     step: "01",
-    icon: MessageSquare,
     label: "Prata med oss",
     headline: "Berätta om ditt företag.",
     body: "Vi tar ett kort strategisamtal för att förstå vad du gör, vilka du riktar dig till och hur vi kan hjälpa er att synas bättre.",
@@ -15,7 +14,6 @@ const steps = [
   },
   {
     step: "02",
-    icon: Paintbrush,
     label: "Vi designar & bygger",
     headline: "Du får en sajt på dagar, inte månader.",
     body: "Vi designar, bygger och testar allt. Du kan ge feedback när som helst. De flesta sajter är klara att lansera inom 1–2 veckor.",
@@ -23,7 +21,6 @@ const steps = [
   },
   {
     step: "03",
-    icon: Rocket,
     label: "Lansering & support",
     headline: "Dags att köra — vi finns kvar.",
     body: "Vi sköter lanseringen, sätter upp hosting och finns tillgängliga för uppdateringar och frågor. Vi är med från lansering och lyssnar på era krav.",
@@ -51,9 +48,7 @@ export default function HomeProcess() {
               style={{ animationDelay: `${i * 100}ms` }}
             >
               <div className={styles.cardTop}>
-                <div className={styles.iconWrap} style={{ background: `${s.accent}18` }}>
-                  <Icon width={16} height={16} style={{ color: s.accent }} strokeWidth={1.8} />
-                </div>
+               
               </div>
               <div>
                 <span className={styles.cardLabel}>{s.label}</span>

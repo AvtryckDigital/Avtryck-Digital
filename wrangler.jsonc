@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "avtryck",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-04-01",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "avtryck_db",
+      "database_name": "avtryck-db",
+      "database_id": "1466d7c9-b0f8-4e30-b9ef-1d6e07b810e0"
+    }
+  ],
+  "vars": {
+    // E-postadress(er) som ska ta emot notiser när någon skickar formuläret (separera med komma om flera)
+    "CONTACT_TO_EMAIL": "admin@avtryckdigital.se",
+    // Avsändare. För test kan du använda 'onboarding@resend.dev', eller din verifierade domän i Resend
+    "CONTACT_FROM_EMAIL": "Avtryck Digital Web <onboarding@resend.dev>"
+  }
+}

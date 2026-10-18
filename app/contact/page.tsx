@@ -131,14 +131,10 @@ export default function ContactPage() {
     if (Object.keys(errs).length > 0) return;
     setLoading(true);
     try {
-      const body = new URLSearchParams({
-        "form-name": "contact",
-        ...fields,
-      });
-      const res = await fetch("/__forms.html", {
+      const res = await fetch("/api/contact", {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fields),
       });
       if (!res.ok) throw new Error("Submit failed");
       setSubmitted(true);
@@ -213,20 +209,10 @@ export default function ContactPage() {
             </div>
           ) : (
             <form
-              name="contact"
-              method="POST"
-              data-netlify="true"
-              netlify-honeypot="bot-field"
               onSubmit={handleSubmit}
               noValidate
               className="glass rounded-2xl p-7 flex flex-col gap-5 border border-white/15"
             >
-              <input type="hidden" name="form-name" value="contact" />
-              <p className="hidden">
-                <label>
-                  <input name="bot-field" />
-                </label>
-              </p>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="name" className="text-xs text-white/70 font-medium">Ditt namn</label>

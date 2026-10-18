@@ -177,8 +177,8 @@ export default function LeadManagerPage() {
   useEffect(() => {
     let cancelled = false;
     fetch("/api/lead-status")
-      .then((res) => res.json())
-      .then((data: { statuses?: Record<string, string> }) => {
+      .then((res) => res.json() as Promise<{ statuses?: Record<string, string> }>)
+      .then((data) => {
         if (cancelled || !data.statuses) return;
         const cleaned: Record<string, ContactStatus> = {};
         for (const [id, value] of Object.entries(data.statuses)) {

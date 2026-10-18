@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight, MessageSquare, Paintbrush, Rocket } from "lucide-react";
 import styles from "./HomeProcess.module.css";
 
 const steps = [
@@ -39,11 +37,9 @@ export default function HomeProcess() {
         </p>
       </div>
       <div className={styles.grid}>
-        {steps.map((s, i) => {
-          const Icon = s.icon;
-          return (
-            <div
-              key={s.step}
+        {steps.map((s, i) => (
+          <div
+            key={s.step}
               className={`${styles.card} ${styles.fadeIn}`}
               style={{ animationDelay: `${i * 100}ms` }}
             >
@@ -56,8 +52,7 @@ export default function HomeProcess() {
               </div>
               <p className={styles.cardBody}>{s.body}</p>
             </div>
-          );
-        })}
+          ))}
       </div>
     </section>
   );

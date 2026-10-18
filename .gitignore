@@ -1,6 +1,10 @@
 node_modules/
 .next/
+.open-next/
+.wrangler/
 .env*
+.dev.vars
 dist/
 .vs/
 *.sqlite
+temp_import.sql
